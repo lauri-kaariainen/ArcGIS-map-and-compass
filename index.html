@@ -1,0 +1,51 @@
+<!doctype html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+	<title>ArcGIS test</title>
+	<link rel="stylesheet" href="http://js.arcgis.com/3.11/esri/css/esri.css">
+	<link rel="stylesheet" href="http://js.arcgis.com/3.11/dijit/themes/claro/claro.css">
+	<script src="http://js.arcgis.com/3.11/"></script>
+	
+	 <style>
+		html, body, #mapDiv {
+		  padding: 0;
+		  margin: 0;
+		  height: 100%;
+		}
+	    #basemapToggle {
+		  position: absolute;
+		  top: 20px;
+		  right: 20px;
+		  z-index: 50;
+		}
+		
+	</style>
+	
+</head>
+<body class="claro">
+	<div id="mapDiv">
+		<div id="basemapToggle"></div>
+	</div>
+
+	<script>
+		console.log([dojo.version.major, dojo.version.minor, dojo.version.patch].join("."));
+		
+		var globalMap;
+		require(["esri/map","esri/dijit/BasemapToggle", "dojo/domReady!"], function(Map,BasemapToggle) { 
+		  globalMap = new Map("mapDiv", {
+			center: [24.850015, 60.239143],
+			zoom: 16,
+			basemap: "gray"
+		  });
+		  
+		   var toggle = new BasemapToggle({
+				map: globalMap,
+				basemap: "topo"
+			  }, "basemapToggle");
+			  toggle.startup();
+			});
+	</script>
+</body>
+
+
