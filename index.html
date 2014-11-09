@@ -24,6 +24,7 @@
 	
 </head>
 <body class="claro">
+	<div id="dir"></div>
 	<div id="mapDiv">
 		<div id="basemapToggle"></div>
 	</div>
@@ -32,18 +33,135 @@
 		console.log([dojo.version.major, dojo.version.minor, dojo.version.patch].join("."));
 		
 		var globalMap;
-		require(["esri/map","esri/dijit/BasemapToggle", "dojo/domReady!"], function(Map,BasemapToggle) { 
-		  globalMap = new Map("mapDiv", {
-			center: [24.850015, 60.239143],
-			zoom: 16,
-			basemap: "gray"
-		  });
-		  
-		   var toggle = new BasemapToggle({
-				map: globalMap,
-				basemap: "topo"
-			  }, "basemapToggle");
-			  toggle.startup();
+		require([
+			"esri/map",
+			"esri/dijit/BasemapToggle",
+			//"esri/dijit/Directions",
+			"dojo/parser",
+			"dojo/on",
+			"esri/geometry/Point",
+			"esri/graphic",
+			"esri/Color",
+			"esri/symbols/SimpleLineSymbol",
+			"esri/symbols/SimpleMarkerSymbol",
+			//"esri/urlUtils",
+			"dijit/layout/BorderContainer", 
+			"dijit/layout/ContentPane", 
+			"dojo/domReady!"
+			], 
+			function(Map,
+					BasemapToggle,
+					/*Directions,*/
+					parser,
+					on,
+					Point,
+					Graphic,
+					Color,
+					SimpleLineSymbol,
+					SimpleMarkerSymbol
+					/*,urlUtils*/
+					) { 
+				var graphic;
+				
+				
+				//parse the element-type stylings
+				parser.parse();
+				//the map itself
+				globalMap = new Map("mapDiv", {
+					center: [24.850015, 60.239143],
+					zoom: 16,
+					basemap: "gray",
+					slider:false
+
+				});
+				//pass the map to handler
+				on(globalMap, "load", mapLoadHandler);
+				//choose between map styles (eg. hi-fi vs. lo-fi)
+				var toggle = new BasemapToggle({
+					map: globalMap,
+					basemap: "topo",
+					basemaps: {
+						"topo":{
+							"label":"hi-fi",
+							"url":"http://js.arcgis.com/3.11/esri/dijit/images/basemaps/topo.jpg"},
+						"gray":{
+							"label":"lo-fi",
+							"url":"http://js.arcgis.com/3.11/esri/dijit/images/basemaps/gray.jpg"}
+						}
+				  }, "basemapToggle");
+				  toggle.startup();
+				//navigation
+	/*			var directions = new Directions({
+				  map: globalMap
+				}, "dir");
+				directions.startup(); 
+	*/
+				// Add a pulsating graphic to the map
+				function addGraphic(pt) {
+				  var symbol = new SimpleMarkerSymbol(SimpleMarkerSymbol.STYLE_CIRCLE, 12, new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, new Color([210, 105, 30, 0.5]), 8), new Color([210, 105, 30, 0.9]));
+				  graphic = new Graphic(pt, symbol);
+				  globalMap.graphics.add(graphic);
+				}
+				
+	/*			 function zoomToLocation(location) {
+				  pt = esri.geometry.geographicToWebMercator(new Point(location.coords.longitude, location.coords.latitude));
+				  addGraphic(pt);
+				  map.centerAndZoom(pt, 17);
+				}
+	*/				
+				
+				//show the pulsating graphic
+				function showLocation(location) {
+				  pt = esri.geometry.geographicToWebMercator(new Point(location.coords.longitude, location.coords.latitude));
+				  if (!graphic) {
+					addGraphic(pt);
+				  } else {
+					//move the graphic if it already exists
+					graphic.setGeometry(pt);
+				  }
+				  globalMap.centerAt(pt);
+				}
+				
+				// The HTML5 geolocation API is used to get the user's current position.
+				function mapLoadHandler() {
+				  on(window, 'resize', globalMap, globalMap.resize);
+				  // check if geolocaiton is supported
+				  if (navigator.geolocation) {
+			//		navigator.geolocation.getCurrentPosition(zoomToLocation, locationError);
+					// retrieve update about the current geographic location of the device
+					watchId = navigator.geolocation.watchPosition(showLocation, locationError);
+				  } else {
+					alert("Browser doesn't support Geolocation. Visit http://caniuse.com to discover browser support for the Geolocation API.");
+				  }
+				}
+				
+				//error handling func
+				 function locationError(error) {
+				  //error occurred so stop watchPosition
+				  if (navigator.geolocation) {
+					navigator.geolocation.clearWatch(watchId);
+				  }
+				  switch (error.code) {
+					case error.PERMISSION_DENIED:
+					  alert("Location not provided");
+					  break;
+
+					case error.POSITION_UNAVAILABLE:
+					  alert("Current location not available");
+					  break;
+
+					case error.TIMEOUT:
+					  alert("Timeout");
+					  break;
+
+					default:
+					  alert("unknown error");
+					  break;
+				  }
+				}
+			
+	
+	
 			});
 	</script>
 </body>
