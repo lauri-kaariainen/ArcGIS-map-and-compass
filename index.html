@@ -91,25 +91,23 @@
 				//if apple, use webkitcompass, else, use event.alpha
 				window.addEventListener("deviceorientation", setAlpha);
 				function setAlpha(evt) {
-					
+					var compassHeading = evt.compassHeading || evt.webkitCompassHeading || -1;
 					//not changed enough
-					
-					if(evt.webkitCompassHeading !== undefined){
-						//setInterval(function(){alert(evt.webkitCompassHeading + "--"+window.orientation);},1000);
-						if(evt.webkitCompassHeading - lastAlpha < 5 && evt.webkitCompassHeading - lastAlpha > -5)
+					if(compassHeading !== -1){
+						//setInterval(function(){alert(compassHeading + "--"+window.orientation);},1000);
+						if(compassHeading - lastAlpha < 5 && compassHeading - lastAlpha > -5)
 							return;
 					}
 					else{
 						if(evt.alpha - lastAlpha < 5 && evt.alpha - lastAlpha > -5)
 							return;
 					}
-					//alert("moving on:"+graphic.symbol.angle +" : "+graphic.symbol.angle);
 					
 					//if apple:
 					
 					
-					if(evt.webkitCompassHeading !== undefined)
-						lastAlpha = evt.webkitCompassHeading;
+					if(compassHeading !== -1)
+						lastAlpha = compassHeading;
 					//fix for angle in evt.alpha being the wrong way
 					else
 						lastAlpha = -evt.alpha;
