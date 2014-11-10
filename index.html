@@ -82,24 +82,24 @@
 					) {
 
 				const SYMBOLFIX = -45;
-				var lastAlpha = 0;
+				var lastCompassValue = 0;
 				var graphic;
 				window.counter = 0;
 				
 				
 				//compass functionality
 				//if apple, use webkitcompass, else, use event.alpha
-				window.addEventListener("deviceorientation", setAlpha);
-				function setAlpha(evt) {
+				window.addEventListener("deviceorientation", setCompassValue,false);
+				function setCompassValue(evt) {
 					var compassHeading = evt.compassHeading || evt.webkitCompassHeading || -1;
 					//not changed enough
 					if(compassHeading !== -1){
 						//setInterval(function(){alert(compassHeading + "--"+window.orientation);},1000);
-						if(compassHeading - lastAlpha < 5 && compassHeading - lastAlpha > -5)
+						if(compassHeading - lastCompassValue < 5 && compassHeading - lastCompassValue > -5)
 							return;
 					}
 					else{
-						if(evt.alpha - lastAlpha < 5 && evt.alpha - lastAlpha > -5)
+						if(evt.alpha - lastCompassValue < 5 && evt.alpha - lastCompassValue > -5)
 							return;
 					}
 					
@@ -107,13 +107,13 @@
 					
 					
 					if(compassHeading !== -1)
-						lastAlpha = compassHeading;
+						lastCompassValue = compassHeading;
 					//fix for angle in evt.alpha being the wrong way
 					else
-						lastAlpha = -evt.alpha;
+						lastCompassValue = -evt.alpha;
 					
 					if(graphic){
-						graphic.symbol.setAngle(parseInt(lastAlpha)+SYMBOLFIX);
+						graphic.symbol.setAngle(parseInt(lastCompassValue)+SYMBOLFIX);
 						//graphic.symbol.setAngle(90+SYMBOLFIX);
 						graphic.draw();
 					}
@@ -182,7 +182,7 @@
 				  globalMap.graphics.add(graphic);
 				  
 				  
-				  graphic.symbol.angle = lastAlpha+SYMBOLFIX;
+				  graphic.symbol.angle = lastCompassValue+SYMBOLFIX;
 				}
 				
 	/*			 function zoomToLocation(location) {
