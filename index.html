@@ -95,7 +95,7 @@
 					//not changed enough
 					
 					if(evt.webkitCompassHeading !== undefined){
-						setInterval(function(){alert(evt.webkitCompassHeading + "--"+window.orientation);},1000);
+						//setInterval(function(){alert(evt.webkitCompassHeading + "--"+window.orientation);},1000);
 						if(evt.webkitCompassHeading - lastAlpha < 5 && evt.webkitCompassHeading - lastAlpha > -5)
 							return;
 					}
