@@ -33,12 +33,8 @@
 </head>
 
 <body class="claro">
-
-	<div id="compass">
-		<!-- <div id="compassnorth">N</div> -->
-		<!-- <div id="compassneedle"><img src="arrow.PNG"/></div> -->
-	</div>
-	<!--div id="dir"></div-->
+	<div id="gpsStatus"><span id="gpsStatusTime"></span><span id="gpsStatusText"></span></div> 
+	
 	<div id="mapDiv">
 		<div id="basemapToggle"></div>
 	</div>
@@ -51,7 +47,6 @@
 		require([
 			"esri/map",
 			"esri/dijit/BasemapToggle",
-			//"esri/dijit/Directions",
 			"dojo/parser",
 			"dojo/on",
 			"esri/geometry/Point",
@@ -61,14 +56,12 @@
 			"esri/symbols/SimpleLineSymbol",
 			"esri/symbols/SimpleMarkerSymbol",
 			"esri/symbols/CartographicLineSymbol",
-			//"esri/urlUtils",
 			"dijit/layout/BorderContainer", 
 			"dijit/layout/ContentPane", 
 			"dojo/domReady!"
 			], 
 			function(Map,
 					BasemapToggle,
-					/*Directions,*/
 					parser,
 					on,
 					Point,
@@ -78,13 +71,14 @@
 					SimpleLineSymbol,
 					SimpleMarkerSymbol,
 					CartographicLineSymbol
-					/*,urlUtils*/
 					) {
 
+				//SYMBOLFIX is a value in degrees for fixing the arrow symbol's orientation, atm it points 45 degs to the right 
 				const SYMBOLFIX = -45;
 				var lastCompassValue = 0;
 				var graphic;
-				window.counter = 0;
+				var gpsStatusIntervalHandle = undefined;
+				
 				
 				
 				//compass functionality
@@ -92,7 +86,8 @@
 				window.addEventListener("deviceorientation", setCompassValue,false);
 				function setCompassValue(evt) {
 					var compassHeading = evt.compassHeading || evt.webkitCompassHeading || -1;
-					//not changed enough
+					
+					//not changed enough, more than 5 degs that is
 					if(compassHeading !== -1){
 						//setInterval(function(){alert(compassHeading + "--"+window.orientation);},1000);
 						if(compassHeading - lastCompassValue < 5 && compassHeading - lastCompassValue > -5)
@@ -102,8 +97,6 @@
 						if(evt.alpha - lastCompassValue < 5 && evt.alpha - lastCompassValue > -5)
 							return;
 					}
-					
-					//if apple:
 					
 					
 					if(compassHeading !== -1)
@@ -158,60 +151,58 @@
 						}
 				  }, "basemapToggle");
 				  toggle.startup();
-				//navigation
-	/*			var directions = new Directions({
-				  map: globalMap
-				}, "dir");
-				directions.startup(); 
-	*/
+
 				
 				//add an arrow which should point to the same direction as user
 				function addGraphic(pt) {
-				  
-				  
-				  //var symbol = new SimpleMarkerSymbol(SimpleMarkerSymbol.STYLE_PATH, 100, new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, new Color([0, 0, 0, 1]), 8), new Color([210, 105, 30, 0.9]));
+				  		  
 				  var symbol = new SimpleMarkerSymbol(SimpleMarkerSymbol.STYLE_PATH, 30, new SimpleLineSymbol(), new Color([10, 10, 10, 0.9]));
 				  
-				  //with this symbol, SYMBOLFIX is -45
+				  //with this arrow symbol, SYMBOLFIX is -45
 				  symbol.setPath("M15.834,29.084 15.834,16.166 2.917,16.166 29.083,2.917z");
-				  //var symbol = new CartographicLineSymbol(CartographicLineSymbol.STYLE_SOLID, new Color([255,100,0]), 100, CartographicLineSymbol.CAP_ROUND, CartographicLineSymbol.JOIN_MITER, 5);
-				  console.log(symbol)
+
+				  //console.log(symbol)
 				
 				  graphic = new Graphic(pt, symbol);
 				  
-				  globalMap.graphics.add(graphic);
-				  
-				  
+				  globalMap.graphics.add(graphic);				  
+				  //initial arrow symbol angle placement
 				  graphic.symbol.angle = lastCompassValue+SYMBOLFIX;
 				}
 				
-	/*			 function zoomToLocation(location) {
-				  pt = esri.geometry.geographicToWebMercator(new Point(location.coords.longitude, location.coords.latitude));
-				  addGraphic(pt);
-				  map.centerAndZoom(pt, 17);
-				}
-	*/				
+					
 				
-				//show the pulsating graphic
+				//show the graphic or move it
 				function showLocation(location) {
-				  pt = esri.geometry.geographicToWebMercator(new Point(location.coords.longitude, location.coords.latitude));
-				  if (!graphic) {
-					addGraphic(pt);
-				  } else {
-					//move the graphic if it already exists
-					graphic.setGeometry(pt);
+					pt = esri.geometry.geographicToWebMercator(new Point(location.coords.longitude, location.coords.latitude));
+
+					if (!graphic) {
+						addGraphic(pt);
+					} else {
+						//move the graphic if it already exists
+						graphic.setGeometry(pt);
+						
+					}
+					//update status time
+					document.getElementById("gpsStatusTime").innerHTML = 0;
+						document.getElementById("gpsStatusText").innerHTML = " s since last update from GPS";
+						if(!gpsStatusIntervalHandle){
+							gpsStatusIntervalHandle = setInterval(
+								function(){
+									document.getElementById("gpsStatusTime").innerHTML = parseInt(document.getElementById("gpsStatusTime").innerHTML)+1;
+								},1000
+							);
+						}
 					
 					
-				  }
-				  globalMap.centerAt(pt);
-				}
+					globalMap.centerAt(pt);
+					}
 				
 				// The HTML5 geolocation API is used to get the user's current position.
 				function mapLoadHandler() {
 				  on(window, 'resize', globalMap, globalMap.resize);
-				  // check if geolocaiton is supported
+				  // check if geolocation is supported
 				  if (navigator.geolocation) {
-			//		navigator.geolocation.getCurrentPosition(zoomToLocation, locationError);
 					// retrieve update about the current geographic location of the device
 					watchId = navigator.geolocation.watchPosition(showLocation, locationError);
 				  } else {
@@ -219,11 +210,11 @@
 				  }
 				}
 				
-				//error handling func
+				//error handling func, pretty much useless now
 				 function locationError(error) {
-				  //error occurred so stop watchPosition
+					//UPDATE! not stopping
 				  if (navigator.geolocation) {
-					navigator.geolocation.clearWatch(watchId);
+				//	navigator.geolocation.clearWatch(watchId);
 				  }
 				  switch (error.code) {
 					case error.PERMISSION_DENIED:
@@ -231,11 +222,13 @@
 					  break;
 
 					case error.POSITION_UNAVAILABLE:
-					  alert("Current location not available");
+					  //alert("Current location not available");
+					  
 					  break;
 
 					case error.TIMEOUT:
-					  alert("Timeout");
+					  //alert("Timeout");
+					  
 					  break;
 
 					default:
