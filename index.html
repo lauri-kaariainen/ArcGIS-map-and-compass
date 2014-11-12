@@ -203,7 +203,7 @@
 				  // check if geolocation is supported
 				  if (navigator.geolocation) {
 					// retrieve update about the current geographic location of the device
-					watchId = navigator.geolocation.watchPosition(showLocation, locationError);
+					watchId = navigator.geolocation.watchPosition(showLocation, locationError,{enableHighAccuracy:true,maximumAge:3000});
 				  } else {
 					alert("Browser doesn't support Geolocation. Visit http://caniuse.com to discover browser support for the Geolocation API.");
 				  }
@@ -221,12 +221,12 @@
 					  break;
 
 					case error.POSITION_UNAVAILABLE:
-					  //alert("Current location not available");
+					 // alert("Current location not available");
 					  
 					  break;
 
 					case error.TIMEOUT:
-					  //alert("Timeout");
+					 // alert("Timeout");
 					  
 					  break;
 
