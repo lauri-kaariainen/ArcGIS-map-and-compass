@@ -3,9 +3,9 @@
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 	<meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
 	<title>ArcGIS test</title>
-	<link rel="stylesheet" href="http://js.arcgis.com/3.11/esri/css/esri.css">
-	<link rel="stylesheet" href="http://js.arcgis.com/3.11/dijit/themes/claro/claro.css">
-	<script src="http://js.arcgis.com/3.11/"></script>
+	<link rel="stylesheet" href="//js.arcgis.com/3.14/esri/css/esri.css">
+	<link rel="stylesheet" href="//js.arcgis.com/3.14/dijit/themes/claro/claro.css">
+	<script src="//js.arcgis.com/3.14/"></script>
 	
 	 <style>
 		html, body, #mapDiv {
@@ -13,14 +13,27 @@
 		  margin: 0;
 		  height: 100%;
 		}
-	    #basemapToggle {
+	    #BasemapToggle {
 		  position: absolute;
 		  top: 20px;
-		  right: 20px;
+		  right: 5px;
 		  z-index: 50;
 		}
 		
+		#search {
+         display: block;
+         position: absolute;
+         z-index: 2;
+         top: 20px;
+         max-width:100px;
+		}
 		
+		#LocateButton {
+			position: absolute;
+			top: 101px;
+			right: 4px;
+			z-index: 50;
+		}
 		
 		#gpsStatus{
 		position:absolute;
@@ -35,7 +48,9 @@
 	<div id="gpsStatus"><span id="gpsStatusTime"></span><span id="gpsStatusText"></span></div> 
 	
 	<div id="mapDiv">
-		<div id="basemapToggle"></div>
+		<div id="search"></div>
+		<div id="LocateButton"></div>
+		<div id="BasemapToggle"></div>
 	</div>
 
 	<script>
@@ -46,6 +61,8 @@
 		require([
 			"esri/map",
 			"esri/dijit/BasemapToggle",
+			"esri/dijit/LocateButton",
+			"esri/dijit/Search",
 			"dojo/parser",
 			"dojo/on",
 			"esri/geometry/Point",
@@ -61,6 +78,8 @@
 			], 
 			function(Map,
 					BasemapToggle,
+					LocateButton,
+					Search,
 					parser,
 					on,
 					Point,
@@ -142,15 +161,31 @@
 					basemap: "topo",
 					basemaps: {
 						"topo":{
-							"label":"hi-fi",
-							"url":"http://js.arcgis.com/3.11/esri/dijit/images/basemaps/topo.jpg"},
+							"title":"hi-fi",
+							"thumbnailUrl":"http://js.arcgis.com/3.11/esri/dijit/images/basemaps/topo.jpg"},
 						"gray":{
-							"label":"lo-fi",
-							"url":"http://js.arcgis.com/3.11/esri/dijit/images/basemaps/gray.jpg"}
+							"title":"lo-fi",
+							"thumbnailUrl":"http://js.arcgis.com/3.11/esri/dijit/images/basemaps/gray.jpg"}
 						}
-				  }, "basemapToggle");
-				  toggle.startup();
+				  }, "BasemapToggle");
+				toggle.startup();
 
+				//add a searchfield for geocoding
+				var searchField = new Search({
+								map: globalMap,
+								enableInfoWindow:false,
+								enableButtonMode:true,
+								
+							}, "search");
+				searchField.startup();
+				//
+				var geoLocate = new LocateButton(
+					{
+						map: globalMap,
+						highlightLocation:false,
+					}, "LocateButton"
+				);
+				geoLocate.startup();
 				
 				//add an arrow which should point to the same direction as user
 				function addGraphic(pt) {
